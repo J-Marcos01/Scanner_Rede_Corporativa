@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Network Scanner - Polícia Militar</title>
+    <style>
+        :root {
+            --bg-deep: #0b0e14; --bg-card: #151921; --border: #2d333b;
+            --text-main: #adbac7; --text-bright: #cdd9e5; --accent: #539bf5;
+            --success: #57ab5a; --danger: #f85149;
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-deep); 
+            color: var(--text-main); margin: 0; padding: 40px 20px; display: flex; justify-content: center;
+        }
+
+        .container { width: 100%; max-width: 1400px; }
+
+        header { 
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 30px;
+        }
+
+        .lang-selector select {
+            background: var(--bg-card); color: var(--text-bright); border: 1px solid var(--border);
+            padding: 5px 10px; border-radius: 4px; cursor: pointer; outline: none;
+        }
+
+        h1 { margin: 0; font-size: 1.4rem; color: var(--text-bright); font-weight: 600; }
+        .timestamp { color: #768390; font-size: 0.85rem; margin-top: 5px; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        
+        .card { 
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; 
+            padding: 20px; position: relative;
+        }
+
+        .card h2 { 
+            margin: 0 0 18px 0; font-size: 0.7rem; text-transform: uppercase; 
+            color: var(--accent); letter-spacing: 1.2px; border-left: 3px solid var(--accent); padding-left: 10px;
+        }
+
+        .row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; border-bottom: 1px solid #2d333b44; padding-bottom: 4px; }
+        .label { color: #768390; }
+        .value { font-family: 'Consolas', monospace; color: var(--text-bright); }
+
+        .pill { 
+            padding: 3px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: bold;
+        }
+        .ok { background: rgba(87, 171, 90, 0.1); color: var(--success); border: 1px solid var(--success); }
+        .fail { background: rgba(248, 81, 73, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+
+        /* === TABELA DE DISPOSITIVOS === */
+        .devices-section {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+        }
+
+        .devices-count {
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        table thead {
+            background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+        }
+
+        table th {
+            color: white;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.8px;
+        }
+
+        table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #2d333b44;
+            color: var(--text-bright);
+            font-family: 'Consolas', monospace;
+        }
+
+        table tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        table tbody tr:hover {
+            background-color: rgba(83, 155, 245, 0.08);
+        }
+
+        table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        table td:first-child {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .footer-actions { 
+            margin-top: 40px; display: flex; gap: 15px; justify-content: center;
+            border-top: 1px solid var(--border); padding-top: 30px;
+        }
+
+        .btn { 
+            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; 
+            font-size: 0.85rem; border: 1px solid var(--border); background: var(--bg-card);
+            color: var(--text-bright); transition: 0.2s;
+        }
+
+        .btn:hover { border-color: #768390; background: #1c2128; }
+        .btn-blue { background: #1f6feb; border: none; color: white; }
+        .btn-blue:hover { background: #388bfd; }
+
+        .watermark { 
+            text-align: center; margin-top: 60px; color: #a6a6a6d4; font-size: 0.65rem; 
+            text-transform: uppercase; letter-spacing: 4px; font-weight: bold;
+        }
+
+        @media print { 
+            .footer-actions, .lang-selector { display: none; }
+            body { padding: 20px; }
+            table { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1 id="txt-title">Scanner de Rede - Polícia Militar</h1>
+                <div class="timestamp" id="txt-generated">Gerado em: {{time}}</div>
+            </div>
+            <div class="lang-selector">
+                <select onchange="changeLang(this.value)">
+                    <option value="pt">PORTUGUÊS</option>
+                    <option value="en">ENGLISH</option>
+                    <option value="es">ESPAÑOL</option>
+                </select>
+            </div>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2 id="txt-system">Sistema & Hardware</h2>
+                <div class="row"><span class="label" id="lbl-host">Hostname</span><span class="value">{{hostname}}</span></div>
+                <div class="row"><span class="label" id="lbl-user">Usuário</span><span class="value">{{user}}</span></div>
+                <div class="row"><span class="label" id="lbl-uptime">Atividade</span><span class="value">{{uptime}}</span></div>
+                <div class="row"><span class="label">MAC PC</span><span class="value">{{mac}}</span></div>
+            </div>
+
+            <div class="card">
+                <h2 id="txt-network">Configuração de Rede</h2>
+                <div class="row"><span class="label" id="lbl-interface">Conexão</span><span class="value">{{interface}}</span></div>
+                <div class="row"><span class="label">IPv4 Local</span><span class="value">{{ip}}</span></div>
+                <div class="row"><span class="label">Gateway IP</span><span class="value">{{gateway}}</span></div>
+                <div class="row"><span class="label" id="lbl-mac-router">MAC Router</span><span class="value">{{mac_router}}</span></div>
+                <div class="row"><span class="label">DNS</span><span class="value">{{dns}}</span></div>
+            </div>
+
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2 id="txt-connectivity">Diagnóstico de Conectividade</h2>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+                    <div><div class="label" style="font-size: 0.75rem; margin-bottom: 5px;">Ping Gateway</div><span class="pill {{class_gw}}">{{status_gw}} ({{lat_gw}})</span></div>
+                    <div><div class="label" style="font-size: 0.75rem; margin-bottom: 5px;">Ping Internet</div><span class="pill {{class_net}}">{{status_net}} ({{lat_net}})</span></div>
+                    <div><div class="label" style="font-size: 0.75rem; margin-bottom: 5px;" id="lbl-dns-res">Resolução DNS</div><span class="pill {{class_dns_test}}">{{status_dns_test}}</span></div>
+                </div>
+            </div>
+
+            <!-- NOVA SEÇÃO: TABELA DE DISPOSITIVOS -->
+            <div class="card devices-section">
+                <h2 id="txt-devices">📡 Dispositivos Detectados na Rede</h2>
+                <div class="devices-count" id="devices-info">
+                    <strong>Total:</strong> {{devices_count}} dispositivo(s) ativo(s)
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">#</th>
+                            <th style="width: 180px;">IP Address</th>
+                            <th style="width: 200px;">MAC Address</th>
+                            <th>Hostname</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{devices_table}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer-actions">
+            <button class="btn btn-blue" onclick="window.print()" id="btn-pdf">📄 Salvar Relatório PDF</button>
+            <button class="btn" onclick="copyData()" id="btn-copy">📋 Copiar para WhatsApp</button>
+        </div>
+
+        <div class="watermark">Desenvolvido por Gustavo Percoski</div>
+    </div>
+
+    <script>
+        const translations = {
+            pt: {
+                title: "Scanner de Rede - Polícia Militar", system: "Sistema & Hardware", 
+                network: "Configuração de Rede", connectivity: "Diagnóstico de Conectividade",
+                devices: "📡 Dispositivos Detectados na Rede",
+                host: "Hostname", user: "Usuário", uptime: "Atividade", interface: "Conexão", 
+                macRouter: "MAC Router", dnsRes: "Resolução DNS",
+                btnPdf: "📄 Salvar Relatório PDF", btnCopy: "📋 Copiar para WhatsApp", 
+                msg: "Copiado para a área de transferência!"
+            },
+            en: {
+                title: "Network Scanner - Military Police", system: "System & Hardware", 
+                network: "Network Configuration", connectivity: "Connectivity Diagnosis",
+                devices: "📡 Detected Network Devices",
+                host: "Hostname", user: "User", uptime: "Uptime", interface: "Interface", 
+                macRouter: "Router MAC", dnsRes: "DNS Resolution",
+                btnPdf: "📄 Save PDF Report", btnCopy: "📋 Copy to WhatsApp", 
+                msg: "Copied to clipboard!"
+            },
+            es: {
+                title: "Escáner de Red - Policía Militar", system: "Sistema y Hardware", 
+                network: "Configuración de Red", connectivity: "Diagnóstico de Conectividade",
+                devices: "📡 Dispositivos Detectados en la Red",
+                host: "Nombre Host", user: "Usuario", uptime: "Tiempo Activo", interface: "Interfaz", 
+                macRouter: "MAC Router", dnsRes: "Resolución DNS",
+                btnPdf: "📄 Guardar Reporte PDF", btnCopy: "📋 Copiar para WhatsApp", 
+                msg: "¡Copiado al portapapeles!"
+            }
+        };
+
+        function changeLang(lang) {
+            const t = translations[lang];
+            document.getElementById('txt-title').innerText = t.title;
+            document.getElementById('txt-system').innerText = t.system;
+            document.getElementById('txt-network').innerText = t.network;
+            document.getElementById('txt-connectivity').innerText = t.connectivity;
+            document.getElementById('txt-devices').innerText = t.devices;
+            document.getElementById('lbl-host').innerText = t.host;
+            document.getElementById('lbl-user').innerText = t.user;
+            document.getElementById('lbl-uptime').innerText = t.uptime;
+            document.getElementById('lbl-interface').innerText = t.interface;
+            document.getElementById('lbl-mac-router').innerText = t.macRouter;
+            document.getElementById('lbl-dns-res').innerText = t.dnsRes;
+            document.getElementById('btn-pdf').innerText = t.btnPdf;
+            document.getElementById('btn-copy').innerText = t.btnCopy;
+        }
+
+        function copyData() {
+            const text = `*DIAGNÓSTICO DE REDE - POLÍCIA MILITAR*\nPC: {{hostname}}\nIP: {{ip}}\nGateway: {{gateway}}\nMAC Router: {{mac_router}}\nDispositivos na Rede: {{devices_count}}`;
+            navigator.clipboard.writeText(text).then(() => {
+                alert(translations[document.querySelector('select').value].msg);
+            });
+        }
+    </script>
+</body>
+</html>
