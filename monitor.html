@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Rede em Tempo Real</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        h1 { color: #333; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .online { background: #4CAF50; color: white; }
+        .offline { background: #f44336; color: white; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #2196F3; color: white; }
+        .atualizado { color: #666; font-size: 0.9em; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🌐 Monitor de Rede em Tempo Real</h1>
+    <div class="atualizado">Última atualização: <span id="ultima-atualizacao">---</span></div>
+    <div id="info-rede"></div>
+    <h2>Dispositivos na Rede (<span id="total-dispositivos">0</span>)</h2>
+    <table id="tabela-dispositivos">
+        <thead><tr><th>#</th><th>IP</th><th>MAC</th><th>Hostname</th><th>Status</th><th>Latência</th></tr></thead>
+        <tbody id="corpo-tabela"></tbody>
+    </table>
+    <script>
+        function atualizarStatus() {
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('ultima-atualizacao').textContent = data.ultima_atualizacao || '---';
+                    document.getElementById('total-dispositivos').textContent = data.dispositivos.length;
+                    
+                    const tbody = document.getElementById('corpo-tabela');
+                    tbody.innerHTML = '';
+                    data.dispositivos.forEach((d, i) => {
+                        const tr = document.createElement('tr');
+                        const statusClass = d.online ? 'online' : 'offline';
+                        const statusText = d.online ? '✓ Online' : '✗ Offline';
+                        tr.innerHTML = `
+                            <td>${i+1}</td>
+                            <td>${d.ip}</td>
+                            <td>${d.mac}</td>
+                            <td>${d.hostname}</td>
+                            <td class="${statusClass}">${statusText}</td>
+                            <td>${d.latencia || '---'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(e => console.error('Erro ao buscar status:', e));
+        }
+        
+        // Atualiza a cada 3 segundos
+        setInterval(atualizarStatus, 3000);
+        atualizarStatus();
+    </script>
+</body>
+</html>

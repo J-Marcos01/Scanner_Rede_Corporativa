@@ -182,7 +182,7 @@
         <header>
             <div>
                 <h1 id="txt-title">Scanner de Rede - Polícia Militar</h1>
-                <div class="timestamp" id="txt-generated">Gerado em: {{time}}</div>
+                <div class="timestamp" id="txt-generated">Gerado em: 09/01/2026 13:21:10</div>
             </div>
             <div class="lang-selector">
                 <select onchange="changeLang(this.value)">
@@ -196,27 +196,27 @@
         <div class="grid">
             <div class="card">
                 <h2 id="txt-system">Sistema & Hardware</h2>
-                <div class="row"><span class="label" id="lbl-host">Hostname</span><span class="value">{{hostname}}</span></div>
-                <div class="row"><span class="label" id="lbl-user">Usuário</span><span class="value">{{user}}</span></div>
-                <div class="row"><span class="label" id="lbl-uptime">Atividade</span><span class="value">{{uptime}}</span></div>
-                <div class="row"><span class="label">MAC PC</span><span class="value">{{mac}}</span></div>
+                <div class="row"><span class="label" id="lbl-host">Hostname</span><span class="value">LAPTOP-LJ1D04UB</span></div>
+                <div class="row"><span class="label" id="lbl-user">Usuário</span><span class="value">JM</span></div>
+                <div class="row"><span class="label" id="lbl-uptime">Atividade</span><span class="value">03/01/2026 13:34:59</span></div>
+                <div class="row"><span class="label">MAC PC</span><span class="value">5C:CD:5B:0E:99:0C</span></div>
             </div>
 
             <div class="card">
                 <h2 id="txt-network">Configuração de Rede</h2>
-                <div class="row"><span class="label" id="lbl-interface">Conexão</span><span class="value">{{interface}}</span></div>
-                <div class="row"><span class="label">IPv4 Local</span><span class="value">{{ip}}</span></div>
-                <div class="row"><span class="label">Gateway IP</span><span class="value">{{gateway}}</span></div>
-                <div class="row"><span class="label" id="lbl-mac-router">MAC Router</span><span class="value">{{mac_router}}</span></div>
-                <div class="row"><span class="label">DNS</span><span class="value">{{dns}}</span></div>
+                <div class="row"><span class="label" id="lbl-interface">Conexão</span><span class="value">Wi-Fi 📶</span></div>
+                <div class="row"><span class="label">IPv4 Local</span><span class="value">192.168.18.64</span></div>
+                <div class="row"><span class="label">Gateway IP</span><span class="value">192.168.18.1</span></div>
+                <div class="row"><span class="label" id="lbl-mac-router">MAC Router</span><span class="value">B4:89:01:19:7D:38</span></div>
+                <div class="row"><span class="label">DNS</span><span class="value">192.168.18.1</span></div>
             </div>
 
             <div class="card" style="grid-column: 1 / -1;">
                 <h2 id="txt-connectivity">Diagnóstico de Conectividade</h2>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
-                    <div><div class="label" style="font-size: 0.75rem; margin-bottom: 5px;">Ping Gateway</div><span class="pill {{class_gw}}">{{status_gw}} ({{lat_gw}})</span></div>
-                    <div><div class="label" style="font-size: 0.75rem; margin-bottom: 5px;">Ping Internet</div><span class="pill {{class_net}}">{{status_net}} ({{lat_net}})</span></div>
-                    <div><div class="label" style="font-size: 0.75rem; margin-bottom: 5px;" id="lbl-dns-res">Resolução DNS</div><span class="pill {{class_dns_test}}">{{status_dns_test}}</span></div>
+                    <div><div class="label" style="font-size: 0.75rem; margin-bottom: 5px;">Ping Gateway</div><span class="pill ok">OK (2ms)</span></div>
+                    <div><div class="label" style="font-size: 0.75rem; margin-bottom: 5px;">Ping Internet</div><span class="pill ok">OK (4ms)</span></div>
+                    <div><div class="label" style="font-size: 0.75rem; margin-bottom: 5px;" id="lbl-dns-res">Resolução DNS</div><span class="pill ok">OK</span></div>
                 </div>
             </div>
 
@@ -224,7 +224,7 @@
             <div class="card devices-section">
                 <h2 id="txt-devices">📡 Dispositivos Detectados na Rede</h2>
                 <div class="devices-count" id="devices-info">
-                    <strong>Total:</strong> {{devices_count}} dispositivo(s) ativo(s)
+                    <strong>Total:</strong> 4 dispositivo(s) ativo(s)
                 </div>
                 <table>
                     <thead>
@@ -237,7 +237,35 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{devices_table}}
+                        
+        <tr>
+            <td>1</td>
+            <td>192.168.18.1</td>
+            <td>B4:89:01:19:7D:38</td>
+            <td>---</td>
+        </tr>
+        
+        <tr>
+            <td>2</td>
+            <td>192.168.18.60</td>
+            <td>B8:F7:75:F7:8F:0F</td>
+            <td>---</td>
+        </tr>
+        
+        <tr>
+            <td>3</td>
+            <td>192.168.18.62</td>
+            <td>AA:BD:5B:57:58:6E</td>
+            <td>---</td>
+        </tr>
+        
+        <tr>
+            <td>4</td>
+            <td>192.168.18.63</td>
+            <td>BA:4D:D5:4D:BA:E1</td>
+            <td>---</td>
+        </tr>
+        
                     </tbody>
                 </table>
             </div>
@@ -300,7 +328,7 @@
         }
 
         function copyData() {
-            const text = `*DIAGNÓSTICO DE REDE - POLÍCIA MILITAR*\nPC: {{hostname}}\nIP: {{ip}}\nGateway: {{gateway}}\nMAC Router: {{mac_router}}\nDispositivos na Rede: {{devices_count}}`;
+            const text = `*DIAGNÓSTICO DE REDE - POLÍCIA MILITAR*\nPC: LAPTOP-LJ1D04UB\nIP: 192.168.18.64\nGateway: 192.168.18.1\nMAC Router: B4:89:01:19:7D:38\nDispositivos na Rede: 4`;
             navigator.clipboard.writeText(text).then(() => {
                 alert(translations[document.querySelector('select').value].msg);
             });
