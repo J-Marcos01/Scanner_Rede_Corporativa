@@ -71,4 +71,4 @@ Para garantir que o monitoramento contínuo não sobrecarregue a rede ou a máqu
 Este projeto foi desenvolvido por **João Marcos**, baseado no código original *Network Scanner* de **Gustavo Percoski**.
 
 * **Autor do Fork:** João Marcos - Implementação de Server, API, Frontend Dinâmico e Multithreading.
-* **Autor Original:** Gustavo Percoski - Lógica base de scan ARP e Template HTML inicial.
+* **Autor Original:** [Gustavo Percoski](https://github.com/gustavopercoski2-prog/Python-Network-Scanner.git) - Lógica base de scan ARP e Template HTML inicial.
