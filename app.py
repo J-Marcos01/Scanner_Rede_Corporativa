@@ -23,7 +23,8 @@ rede_estado_atual = {
     "status_global": {}
 }
 monitoramento_ativo = False
-intervalo_ping = 5  # segundos entre cada ciclo de ping
+intervalo_ping = 5  # segundos entre cada ciclo de ping rápido
+intervalo_discovery = 60 # segundos entre cada varredura completa por novos dispositivos
 max_threads_monitor = 4  # threads para monitoramento (menos que scan inicial)
 
 # Garante que o EXE encontre o HTML interno
@@ -48,8 +49,8 @@ def get_router_mac(gateway_ip):
     try:
         # Ping rápido para garantir que o roteador responda ao ARP
         subprocess.run(["ping", "-n", "1", "-w", "700", gateway_ip], capture_output=True, text=True)
-        # Lê a tabela ARP do Windows
-        arp_out = subprocess.check_output(f"arp -a {gateway_ip}", shell=True).decode('cp850')
+        # [CORREÇÃO DE SEGURANÇA] Removido shell=True e passado comando como lista
+        arp_out = subprocess.check_output(["arp", "-a", gateway_ip]).decode('cp850')
         # Regex para capturar o MAC
         mac_match = re.search(r"([0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2})", arp_out)
         if mac_match:
@@ -108,7 +109,8 @@ def get_mac_from_arp(ip):
     """Obtém o MAC address de um IP via ARP"""
     try:
         subprocess.run(["ping", "-n", "1", "-w", "300", ip], capture_output=True, text=True)
-        arp_out = subprocess.check_output(f"arp -a {ip}", shell=True).decode('cp850')
+        # [CORREÇÃO DE SEGURANÇA] Removido shell=True e passado comando como lista
+        arp_out = subprocess.check_output(["arp", "-a", ip]).decode('cp850')
         mac_match = re.search(r"([0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2})", arp_out)
         if mac_match:
             return mac_match.group(1).replace('-', ':').upper()
@@ -177,6 +179,9 @@ class MonitorHandler(SimpleHTTPRequestHandler):
                 if not os.path.exists(monitor_path):
                     # Se não existir, criar um HTML básico
                     monitor_path = "monitor.html"
+                    self._criar_html_monitor()
+                else:
+                    # Sobrescreve para garantir versão atualizada (Dark Mode/ID)
                     self._criar_html_monitor()
                 
                 self.send_response(200)
@@ -343,36 +348,65 @@ class MonitorHandler(SimpleHTTPRequestHandler):
             f.write(html_content)
 
 
-def loop_monitoramento():
-    """Loop principal de monitoramento que roda em thread separada"""
+def loop_monitoramento(network_range):
+    """Loop principal de monitoramento e descoberta"""
     global rede_estado_atual, monitoramento_ativo
     
-    print("[Monitor] Thread de monitoramento iniciada")
+    print(f"[Monitor] Iniciado. Ping rápido a cada {intervalo_ping}s. Discovery a cada {intervalo_discovery}s.")
+    
+    ultimo_discovery = 0
     
     while monitoramento_ativo:
         try:
+            # 1. CICLO DE DESCOBERTA (Roda a cada X segundos)
+            if time.time() - ultimo_discovery > intervalo_discovery:
+                # print("[Monitor] Buscando novos dispositivos...")
+                novos_dispositivos = scan_network(network_range)
+                
+                # Mescla a lista nova com a atual (preservando quem já estava lá)
+                ips_atuais = [d['ip'] for d in rede_estado_atual["dispositivos"]]
+                
+                for novo in novos_dispositivos:
+                    if novo['ip'] not in ips_atuais:
+                        # Prepara o objeto completo para o monitor
+                        novo_obj = {
+                            "ip": novo['ip'],
+                            "mac": novo['mac'],
+                            "hostname": novo['hostname'],
+                            "online": True,
+                            "status": "OK",
+                            "latencia": "---",
+                            "class": "ok"
+                        }
+                        rede_estado_atual["dispositivos"].append(novo_obj)
+                        print(f"[Monitor] Novo dispositivo encontrado: {novo['ip']}")
+                
+                # Reordena a lista por IP
+                rede_estado_atual["dispositivos"].sort(key=lambda x: [int(n) for n in x["ip"].split(".")])
+                ultimo_discovery = time.time()
+
+            # 2. CICLO DE MONITORAMENTO (PING RÁPIDO)
             dispositivos_atualizados = []
             dispositivos_atuais = rede_estado_atual.get("dispositivos", [])
             
             if not dispositivos_atuais:
-                print("[Monitor] Nenhum dispositivo para monitorar. Aguardando...")
                 time.sleep(intervalo_ping)
                 continue
             
             # Função para verificar um dispositivo
             def verificar_dispositivo(device):
                 status = run_ping_rapido(device['ip'], timeout=500)
-                return {
-                    "ip": device['ip'],
-                    "mac": device.get('mac', '---'),
-                    "hostname": device.get('hostname', '---'),
+                # Mantém os dados fixos e atualiza os dinâmicos
+                d_copy = device.copy()
+                d_copy.update({
                     "status": status['status'],
                     "latencia": status['lat'],
                     "online": status['online'],
                     "class": status['class']
-                }
+                })
+                return d_copy
             
-            # Usa ThreadPool com limite de threads para não sobrecarregar
+            # Usa ThreadPool para pings rápidos
             with ThreadPoolExecutor(max_workers=max_threads_monitor) as executor:
                 futures = [executor.submit(verificar_dispositivo, d) for d in dispositivos_atuais]
                 for future in as_completed(futures):
@@ -380,26 +414,28 @@ def loop_monitoramento():
                         resultado = future.result()
                         dispositivos_atualizados.append(resultado)
                     except Exception as e:
-                        print(f"[Monitor] Erro ao verificar dispositivo: {e}")
+                        pass
             
             # Atualiza o estado global
-            rede_estado_atual["dispositivos"] = sorted(
-                dispositivos_atualizados, 
-                key=lambda x: [int(n) for n in x["ip"].split(".")]
-            )
+            if dispositivos_atualizados:
+                 rede_estado_atual["dispositivos"] = sorted(
+                    dispositivos_atualizados, 
+                    key=lambda x: [int(n) for n in x["ip"].split(".")]
+                )
+            
             rede_estado_atual["ultima_atualizacao"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
             
-            # Aguarda antes do próximo ciclo
+            # Aguarda antes do próximo ciclo de ping
             time.sleep(intervalo_ping)
             
         except Exception as e:
-            print(f"[Monitor] Erro no loop de monitoramento: {e}")
+            print(f"[Monitor] Erro no loop: {e}")
             time.sleep(intervalo_ping)
     
-    print("[Monitor] Thread de monitoramento encerrada")
+    print("[Monitor] Thread encerrada")
 
 
-def iniciar_monitoramento(dispositivos, rede_info):
+def iniciar_monitoramento(dispositivos, rede_info, network_range):
     """Inicia o monitoramento em tempo real"""
     global rede_estado_atual, monitoramento_ativo
     
@@ -418,16 +454,16 @@ def iniciar_monitoramento(dispositivos, rede_info):
     rede_estado_atual["rede_info"] = rede_info
     rede_estado_atual["ultima_atualizacao"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     
-    # Inicia a thread de monitoramento
+    # Inicia a thread de monitoramento (passando o range da rede)
     monitoramento_ativo = True
-    thread_monitor = threading.Thread(target=loop_monitoramento, daemon=True)
+    thread_monitor = threading.Thread(target=loop_monitoramento, args=(network_range,), daemon=True)
     thread_monitor.start()
     
     print(f"\n{'='*60}")
     print("🔴 MONITOR EM TEMPO REAL ATIVO")
     print(f"{'='*60}")
-    print(f"📊 Monitorando {len(dispositivos)} dispositivos")
-    print(f"⏱️  Intervalo de atualização: {intervalo_ping} segundos")
+    print(f"📊 Monitorando {len(dispositivos)} dispositivos iniciais")
+    print(f"⏱️  Ping Rápido: cada {intervalo_ping}s | Discovery: cada {intervalo_discovery}s")
     print(f"🌐 Acesse: http://localhost:8000")
     print(f"{'='*60}\n")
     
@@ -458,7 +494,11 @@ def main():
 
     # Escaneia a rede local
     print("Escaneando rede local... Isto pode levar alguns minutos.")
-    network_range = net["ip"].rsplit(".", 1)[0] + ".0/24"
+    if net["ip"] != "---":
+        network_range = net["ip"].rsplit(".", 1)[0] + ".0/24"
+    else:
+        network_range = "192.168.0.0/24" # Fallback
+
     devices = scan_network(network_range)
 
     # Gera tabela HTML dos dispositivos
@@ -517,7 +557,7 @@ def main():
     resposta = input("Deseja ativar o monitoramento em tempo real? (s/n): ").strip().lower()
     
     if resposta in ['s', 'sim', 'y', 'yes']:
-        iniciar_monitoramento(devices, net)
+        iniciar_monitoramento(devices, net, network_range)
     else:
         print("Programa finalizado.")
 
