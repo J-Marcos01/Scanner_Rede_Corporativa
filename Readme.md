@@ -29,12 +29,20 @@ Este projeto é um **Fork aprimorado** do *Network Scanner* original. Enquanto a
 
 ---
 
+## 🎯 Cenários de Aplicação
+Esta ferramenta é ideal para ambientes de pequeno e médio porte:
+* **Escritórios e PMEs:** Monitorar se impressoras, servidores de arquivos e roteadores Wi-Fi estão online.
+* **Suporte de Campo:** Diagnóstico rápido para técnicos identificarem quais IPs estão ocupados em uma rede desconhecida.
+* **Home Lab / Home Office:** Acompanhar dispositivos IoT e estabilidade da conexão local.
+
+---
+
 ## 🛠️ Como Usar
 
-### Pré-requisitos
-* Windows (devido ao uso de comandos como `arp -a` e `ping`)
-* Python 3.x instalado
-* Nenhuma biblioteca externa necessária (apenas Standard Lib)
+### Pré-requisitos e Limitações
+* **Sistema Operacional:** Windows 10/11 (utiliza comandos nativos do kernel Windows).
+* **Protocolo:** IPv4 apenas.
+* **Escopo:** Otimizado para redes /24 (Classe C) para garantir varredura rápida (< 2 min).
 
 ### Passo a Passo
 1.  **Execute o script:**
@@ -55,7 +63,7 @@ Para garantir que o monitoramento contínuo não sobrecarregue a rede ou a máqu
 * **Smart Polling:** O sistema ajusta o `timeout` dos pings para 500ms para garantir atualizações rápidas sem "floodar" a rede.
 * **Consumo Baixo:** Ocupa menos de 5% de CPU e ~50MB de RAM em operação contínua.
 
-> *Para detalhes técnicos profundos sobre as decisões de arquitetura, consulte o arquivo [OTIMIZACOES.md](./OTIMIZACOES.md) incluído neste repositório.*
+> *Para detalhes técnicos profundos sobre as decisões de arquitetura e benchmarks, consulte a documentação [OTIMIZACOES.md](./OTIMIZACOES.md).*
 
 ---
 
