@@ -151,6 +151,7 @@ def scan_network(network_ip):
     
     return devices
 
+
 # ========== CLASSES E FUNÇÕES PARA MONITORAMENTO EM TEMPO REAL ==========
 
 class MonitorHandler(SimpleHTTPRequestHandler):
@@ -191,68 +192,153 @@ class MonitorHandler(SimpleHTTPRequestHandler):
             return SimpleHTTPRequestHandler.do_GET(self)
     
     def _criar_html_monitor(self):
-        """Cria um HTML básico para monitoramento se não existir"""
+        """Cria um HTML para monitoramento com o mesmo visual Dark Mode do relatório estático"""
         html_content = """<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang=\"pt-BR\">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor de Rede em Tempo Real</title>
+    <meta charset=\"UTF-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <title>Monitor Real-Time | João Marcos</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        h1 { color: #333; }
-        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
-        .online { background: #4CAF50; color: white; }
-        .offline { background: #f44336; color: white; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #2196F3; color: white; }
-        .atualizado { color: #666; font-size: 0.9em; margin: 10px 0; }
+        :root {
+            --bg-deep: #0b0e14; --bg-card: #151921; --border: #2d333b;
+            --text-main: #adbac7; --text-bright: #cdd9e5; --accent: #539bf5;
+            --success: #57ab5a; --danger: #f85149;
+        }
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-deep); 
+            color: var(--text-main); margin: 0; padding: 40px 20px; display: flex; justify-content: center;
+        }
+        .container { width: 100%; max-width: 1200px; }
+        
+        header { 
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 30px;
+        }
+        h1 { margin: 0; font-size: 1.4rem; color: var(--text-bright); font-weight: 600; }
+        .timestamp { color: #768390; font-size: 0.85rem; margin-top: 5px; }
+        .live-indicator { color: var(--success); font-weight: bold; animation: pulse 2s infinite; }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .card { 
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; 
+            padding: 20px; position: relative; margin-bottom: 20px;
+        }
+        .card h2 { 
+            margin: 0 0 18px 0; font-size: 0.7rem; text-transform: uppercase; 
+            color: var(--accent); letter-spacing: 1.2px; border-left: 3px solid var(--accent); padding-left: 10px;
+        }
+
+        /* Tabela */
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        table thead { background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%); }
+        table th { color: white; padding: 14px 16px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 0.7rem; }
+        table td { padding: 12px 16px; border-bottom: 1px solid #2d333b44; color: var(--text-bright); font-family: 'Consolas', monospace; }
+        
+        /* Badges e Status */
+        .pill { padding: 3px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: bold; display: inline-block; }
+        .ok { background: rgba(87, 171, 90, 0.15); color: var(--success); border: 1px solid var(--success); }
+        .fail { background: rgba(248, 81, 73, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+        
+        /* Animação Offline */
+        @keyframes blink-red {
+            0% { background-color: rgba(248, 81, 73, 0.1); }
+            50% { background-color: rgba(248, 81, 73, 0.3); }
+            100% { background-color: rgba(248, 81, 73, 0.1); }
+        }
+        tr.offline { animation: blink-red 2s infinite; border-left: 4px solid var(--danger); }
+        tr.offline td { color: var(--danger); }
+
+        .watermark { 
+            text-align: center; margin-top: 60px; color: #a6a6a6d4; font-size: 0.65rem; 
+            text-transform: uppercase; letter-spacing: 2px; font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <h1>🌐 Monitor de Rede em Tempo Real</h1>
-    <div class="atualizado">Última atualização: <span id="ultima-atualizacao">---</span></div>
-    <div id="info-rede"></div>
-    <h2>Dispositivos na Rede (<span id="total-dispositivos">0</span>)</h2>
-    <table id="tabela-dispositivos">
-        <thead><tr><th>#</th><th>IP</th><th>MAC</th><th>Hostname</th><th>Status</th><th>Latência</th></tr></thead>
-        <tbody id="corpo-tabela"></tbody>
-    </table>
+    <div class=\"container\">
+        <header>
+            <div>
+                <h1>📡 Monitor de Rede Real-Time</h1>
+                <div class=\"timestamp\">Última atualização: <span id=\"ultima-atualizacao\">---</span> <span class=\"live-indicator\">● AO VIVO</span></div>
+            </div>
+            <div style=\"text-align: right;\">
+                <div style=\"font-size: 0.8rem; color: #768390;\">STATUS GLOBAL</div>
+                <div id=\"status-geral\" style=\"color: var(--success); font-weight: bold;\">Monitorando</div>
+            </div>
+        </header>
+
+        <div class=\"card\">
+            <h2>Dispositivos Detectados (<span id=\"total-dispositivos\">0</span>)</h2>
+            <table id=\"tabela-dispositivos\">
+                <thead><tr><th>ID</th><th>IP Address</th><th>MAC Address</th><th>Hostname</th><th>Status</th><th>Latência</th></tr></thead>
+                <tbody id=\"corpo-tabela\"></tbody>
+            </table>
+        </div>
+
+        <div class=\"watermark\">
+            Desenvolvido por João Marcos | Baseado no projeto de Gustavo Percoski
+        </div>
+    </div>
+
     <script>
         function atualizarStatus() {
             fetch('/api/status')
                 .then(r => r.json())
                 .then(data => {
                     document.getElementById('ultima-atualizacao').textContent = data.ultima_atualizacao || '---';
-                    document.getElementById('total-dispositivos').textContent = data.dispositivos.length;
+                    
+                    const devices = data.dispositivos || [];
+                    document.getElementById('total-dispositivos').textContent = devices.length;
                     
                     const tbody = document.getElementById('corpo-tabela');
                     tbody.innerHTML = '';
-                    data.dispositivos.forEach((d, i) => {
+                    
+                    let offlineCount = 0;
+
+                    devices.forEach((d, i) => {
                         const tr = document.createElement('tr');
-                        const statusClass = d.online ? 'online' : 'offline';
-                        const statusText = d.online ? '✓ Online' : '✗ Offline';
+                        const isOnline = d.online && d.status === 'OK';
+                        
+                        if (!isOnline) {
+                            tr.classList.add('offline');
+                            offlineCount++;
+                        }
+
+                        const statusClass = isOnline ? 'ok' : 'fail';
+                        const statusText = isOnline ? 'ONLINE' : 'OFFLINE';
+
                         tr.innerHTML = `
-                            <td>${i+1}</td>
+                            <td style="color: var(--accent); font-weight: bold;">${i+1}</td>
                             <td>${d.ip}</td>
                             <td>${d.mac}</td>
                             <td>${d.hostname}</td>
-                            <td class="${statusClass}">${statusText}</td>
+                            <td><span class="pill ${statusClass}">${statusText}</span></td>
                             <td>${d.latencia || '---'}</td>
                         `;
                         tbody.appendChild(tr);
                     });
+
+                    // Atualiza status geral no header
+                    const statusGeral = document.getElementById('status-geral');
+                    if (offlineCount > 0) {
+                        statusGeral.textContent = `${offlineCount} Dispositivo(s) Offline`;
+                        statusGeral.style.color = 'var(--danger)';
+                    } else {
+                        statusGeral.textContent = 'Rede Saudável';
+                        statusGeral.style.color = 'var(--success)';
+                    }
                 })
-                .catch(e => console.error('Erro ao buscar status:', e));
+                .catch(e => console.error('Erro de conexão:', e));
         }
         
-        // Atualiza a cada 3 segundos
         setInterval(atualizarStatus, 3000);
         atualizarStatus();
     </script>
 </body>
 </html>"""
+        # Sempre grava o HTML atualizado
         with open("monitor.html", "w", encoding="utf-8") as f:
             f.write(html_content)
 

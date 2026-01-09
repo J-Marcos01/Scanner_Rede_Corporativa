@@ -1,0 +1,14 @@
+# Arquivos gerados pelo Scanner
+diagnostico_rede.html
+monitor.html
+
+# Arquivos de compilação Python/PyInstaller
+__pycache__/
+build/
+dist/
+*.spec
+
+# Arquivos de sistema e IDE
+.vscode/
+.idea/
+*.log

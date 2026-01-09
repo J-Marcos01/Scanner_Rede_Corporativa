@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="utf-8">
-    <title>Network Scanner - Polícia Militar</title>
+    <title>Network Scanner - </title>
     <style>
         :root {
             --bg-deep: #0b0e14; --bg-card: #151921; --border: #2d333b;
@@ -181,8 +181,8 @@
     <div class="container">
         <header>
             <div>
-                <h1 id="txt-title">Scanner de Rede - Polícia Militar</h1>
-                <div class="timestamp" id="txt-generated">Gerado em: 09/01/2026 13:21:10</div>
+                <h1 id="txt-title">Scanner de Rede -</h1>
+                <div class="timestamp" id="txt-generated">Gerado em: 09/01/2026 18:39:02</div>
             </div>
             <div class="lang-selector">
                 <select onchange="changeLang(this.value)">
@@ -215,7 +215,7 @@
                 <h2 id="txt-connectivity">Diagnóstico de Conectividade</h2>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
                     <div><div class="label" style="font-size: 0.75rem; margin-bottom: 5px;">Ping Gateway</div><span class="pill ok">OK (2ms)</span></div>
-                    <div><div class="label" style="font-size: 0.75rem; margin-bottom: 5px;">Ping Internet</div><span class="pill ok">OK (4ms)</span></div>
+                    <div><div class="label" style="font-size: 0.75rem; margin-bottom: 5px;">Ping Internet</div><span class="pill ok">OK (5ms)</span></div>
                     <div><div class="label" style="font-size: 0.75rem; margin-bottom: 5px;" id="lbl-dns-res">Resolução DNS</div><span class="pill ok">OK</span></div>
                 </div>
             </div>
@@ -224,7 +224,7 @@
             <div class="card devices-section">
                 <h2 id="txt-devices">📡 Dispositivos Detectados na Rede</h2>
                 <div class="devices-count" id="devices-info">
-                    <strong>Total:</strong> 4 dispositivo(s) ativo(s)
+                    <strong>Total:</strong> 2 dispositivo(s) ativo(s)
                 </div>
                 <table>
                     <thead>
@@ -247,22 +247,8 @@
         
         <tr>
             <td>2</td>
-            <td>192.168.18.60</td>
-            <td>B8:F7:75:F7:8F:0F</td>
-            <td>---</td>
-        </tr>
-        
-        <tr>
-            <td>3</td>
-            <td>192.168.18.62</td>
-            <td>AA:BD:5B:57:58:6E</td>
-            <td>---</td>
-        </tr>
-        
-        <tr>
-            <td>4</td>
-            <td>192.168.18.63</td>
-            <td>BA:4D:D5:4D:BA:E1</td>
+            <td>192.168.18.66</td>
+            <td>6E:78:9F:89:AF:92</td>
             <td>---</td>
         </tr>
         
@@ -276,7 +262,7 @@
             <button class="btn" onclick="copyData()" id="btn-copy">📋 Copiar para WhatsApp</button>
         </div>
 
-        <div class="watermark">Desenvolvido por Gustavo Percoski</div>
+        <div class="watermark">Desenvolvido por João Marcos | Baseado no projeto de Gustavo Percoski</div>
     </div>
 
     <script>
@@ -328,7 +314,7 @@
         }
 
         function copyData() {
-            const text = `*DIAGNÓSTICO DE REDE - POLÍCIA MILITAR*\nPC: LAPTOP-LJ1D04UB\nIP: 192.168.18.64\nGateway: 192.168.18.1\nMAC Router: B4:89:01:19:7D:38\nDispositivos na Rede: 4`;
+            const text = `*DIAGNÓSTICO DE REDE - POLÍCIA MILITAR*\nPC: LAPTOP-LJ1D04UB\nIP: 192.168.18.64\nGateway: 192.168.18.1\nMAC Router: B4:89:01:19:7D:38\nDispositivos na Rede: 2`;
             navigator.clipboard.writeText(text).then(() => {
                 alert(translations[document.querySelector('select').value].msg);
             });
